@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://vsuharnikov.github.io/"/>
-  <updated>2017-02-26T22:00:22.000Z</updated>
+  <updated>2017-03-03T06:05:43.000Z</updated>
   <id>https://vsuharnikov.github.io/</id>
   
   <author>
@@ -14,6 +14,40 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Working with JavaFX in Scala</title>
+    <link href="https://vsuharnikov.github.io/2017/03/03/javafx-scala/"/>
+    <id>https://vsuharnikov.github.io/2017/03/03/javafx-scala/</id>
+    <published>2017-03-03T00:00:00.000Z</published>
+    <updated>2017-03-03T06:05:43.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>I’m working on a prototype of the GUI application, that helps me to be more productive. </p>
+<p>At first i tried <a href="http://www.scalafx.org" rel="external nofollow noopener noreferrer" target="_blank">ScalaFX</a>, but faced with several problems (especially with the TableView).<br>So, i switched to the JavaFX and implemented all functionality two or three times faster.</p>
+<p>JavaFX and Scala 2.12 are working together perfectly, thanks to the <a href="http://www.scala-lang.org/news/2.12.0#lambda-syntax-for-sam-types" rel="external nofollow noopener noreferrer" target="_blank">SAM</a>.<br>But there is a subtle problem. </p>
+<p>Let’s look on an example:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JavaCustomControl</span> <span class="keyword">extends</span> <span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="meta">@FXML</span></div><div class="line">  <span class="keyword">private</span> TextField textField;</div><div class="line"></div><div class="line">  <span class="comment">// It could be any inner class</span></div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Runnable f = <span class="keyword">new</span> Runnable() &#123;</div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">      System.out.println(textField);</div><div class="line">    &#125;</div><div class="line">  &#125;;</div><div class="line">  </div><div class="line">  <span class="comment">// Load a template by FXMLLoader in the constructor</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>You could write an equivalent in Scala in the following way:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ScalaCustomControl</span> <span class="keyword">extends</span> <span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="meta">@FXML</span> <span class="keyword">private</span> <span class="keyword">var</span> textField: <span class="type">TextField</span> = _</div><div class="line"></div><div class="line">  <span class="comment">// It might be any inner class</span></div><div class="line">  <span class="keyword">private</span> <span class="keyword">val</span> f: <span class="type">Runnable</span> = <span class="keyword">new</span> <span class="type">Runnable</span>() &#123;</div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span></span>() &#123;</div><div class="line">      <span class="type">System</span>.out.println(textField)</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  <span class="comment">// Load a template by FXMLLoader in the constructor</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>Welcome to the trap! The <code>textField</code> will be null after the <code>FXMLLoader.load</code>, because the byte code for these two example are different.</p>
+<p>Let’s use <code>:javap -private</code> on these classes:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">test</span>.<span class="title">JavaCustomControl</span> <span class="keyword">extends</span> <span class="title">javafx</span>.<span class="title">scene</span>.<span class="title">layout</span>.<span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="keyword">private</span> javafx.scene.control.TextField textField;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> java.lang.Runnable f;</div><div class="line">  <span class="keyword">public</span> test.JavaCustomControl();</div><div class="line">  <span class="keyword">static</span> javafx.scene.control.TextField access$<span class="number">000</span>(test.JavaCustomControl);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>vs:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">test</span>.<span class="title">ScalaCustomControl</span> <span class="keyword">extends</span> <span class="title">javafx</span>.<span class="title">scene</span>.<span class="title">layout</span>.<span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> javafx.scene.control.TextField test$ScalaCustomControl$$textField;</div><div class="line">  <span class="keyword">private</span> <span class="keyword">final</span> java.lang.Runnable f;</div><div class="line">  <span class="keyword">public</span> javafx.scene.control.TextField test$ScalaCustomControl$$textField();</div><div class="line">  <span class="keyword">private</span> java.lang.<span class="function">Runnable <span class="title">f</span><span class="params">()</span></span>;</div><div class="line">  <span class="keyword">public</span> test.ScalaCustomControl();</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>As you see, the Scala’s compiler mangle the <code>textField</code> variable.</p>
+<p>How could you fix it? The only way is to make the <code>textField</code> public:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ScalaCustomControl</span> <span class="keyword">extends</span> <span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="meta">@FXML</span> <span class="keyword">var</span> textField: <span class="type">TextField</span> = _</div><div class="line">  <span class="comment">// …</span></div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>Now the name isn’t mangled:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">public <span class="class"><span class="keyword">class</span> <span class="title">test</span>.<span class="title">ScalaCustomControl</span> <span class="keyword">extends</span> <span class="title">javafx</span>.<span class="title">scene</span>.<span class="title">layout</span>.<span class="title">VBox</span> </span>&#123;</div><div class="line">  <span class="keyword">private</span> javafx.scene.control.<span class="type">TextField</span> textField;</div></pre></td></tr></table></figure></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;I’m working on a prototype of the GUI application, that helps me to be more productive. &lt;/p&gt;
+&lt;p&gt;At first i tried &lt;a href=&quot;http://www.scal
+    
+    </summary>
+    
+    
+      <category term="scala" scheme="https://vsuharnikov.github.io/tags/scala/"/>
+    
+      <category term="javafx" scheme="https://vsuharnikov.github.io/tags/javafx/"/>
+    
+  </entry>
   
   <entry>
     <title>Grepping logs without data loss</title>
