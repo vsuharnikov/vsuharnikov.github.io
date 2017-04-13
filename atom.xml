@@ -39,9 +39,9 @@
     </summary>
     
     
-      <category term="scala" scheme="https://vsuharnikov.github.io/tags/scala/"/>
-    
       <category term="sbt" scheme="https://vsuharnikov.github.io/tags/sbt/"/>
+    
+      <category term="scala" scheme="https://vsuharnikov.github.io/tags/scala/"/>
     
   </entry>
   
